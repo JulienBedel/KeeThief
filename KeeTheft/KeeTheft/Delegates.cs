@@ -54,6 +54,13 @@ namespace KeeTheft
             IntPtr attributeList);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate DI.Data.Native.NTSTATUS NtFreeVirtualMemory(
+            IntPtr processHandle,
+            ref IntPtr baseAddress,
+            ref IntPtr regionSize,
+            uint freeType);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate bool CloseHandle(IntPtr hObject);
     }
 }

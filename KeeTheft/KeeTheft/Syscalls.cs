@@ -77,5 +77,17 @@ namespace KeeTheft
                 maximumStackSize,
                 attributeList);
         }
+
+        public static DI.Data.Native.NTSTATUS NtFreeVirtualMemory(IntPtr processHandle, ref IntPtr baseAddress, ref IntPtr regionSize, uint freeType)
+        {
+            IntPtr stub = DI.DynamicInvoke.Generic.GetSyscallStub("NtFreeVirtualMemory");
+            Delegates.NtFreeVirtualMemory ntFreeVirtualMemory = (Delegates.NtFreeVirtualMemory)Marshal.GetDelegateForFunctionPointer(stub, typeof(Delegates.NtFreeVirtualMemory));
+
+            return ntFreeVirtualMemory(
+                processHandle,
+                ref baseAddress,
+                ref regionSize,
+                freeType);
+        }
     }
 }

