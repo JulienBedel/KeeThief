@@ -44,6 +44,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClrMDHelper.cs" />
+    <Compile Include="Delegates.cs" />
+    <Compile Include="DInvoke\Data\Native.cs" />
+    <Compile Include="DInvoke\Data\PE.cs" />
+    <Compile Include="DInvoke\Data\Win32.cs" />
+    <Compile Include="DInvoke\DynamicInvoke\Generic.cs" />
+    <Compile Include="DInvoke\DynamicInvoke\Native.cs" />
+    <Compile Include="DInvoke\ManualMap\Map.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="KeyInfo\IUserKey.cs" />
     <Compile Include="KeyInfo\KcpCompositeKeyInfo.cs" />
@@ -53,6 +60,7 @@
     <Compile Include="Logger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Syscalls.cs" />
     <Compile Include="Win32.cs" />
   </ItemGroup>
   <ItemGroup>

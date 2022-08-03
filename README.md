@@ -1,5 +1,9 @@
 # KeeThief
 
+:exclamation: **Changes in this fork:** using syscalls for shellcode injection routines via [D/Invoke](https://thewover.github.io/Dynamic-Invoke/) (by [@TheWover](https://twitter.com/therealwover) and [@FuzzySecurity](https://twitter.com/fuzzysec)).
+
+---
+
 Allows for the extraction of KeePass 2.X key material from memory, as well as the backdooring and enumeration
 of the KeePass trigger system.
 
